@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patrick Steffensen — CV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF8;
+    --ink:#1B1B18;
+    --ink-soft:#5C5A53;
+    --ink-faint:#8A867A;
+    --line:#E1DDD2;
+    --accent:#1A7F37;
+    --accent-bg:#DCFCE4;
+    --accent-line:#B7E3C4;
+    --lang-py:#3572A5;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:#ECE8DE;
+    color:var(--ink);
+    font-family:'JetBrains Mono',monospace;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{ max-width:800px; margin:48px auto; }
+
+  .controls{
+    display:flex;
+    justify-content:flex-end;
+    gap:6px;
+    padding:0 4px 14px;
+  }
+  .btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-soft);
+    padding:7px 13px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn.active{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .page{
+    background:var(--paper);
+    box-shadow:0 1px 3px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+
+  /* ---- repo chrome bar ---- */
+  .chrome{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 28px;
+    background:#F1EFE8;
+    border-bottom:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .crumb .sep{ color:var(--ink-faint); margin:0 3px; }
+  .chrome-right{ display:flex; align-items:center; gap:10px; }
+  .branch-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    background:var(--accent-bg);
+    color:var(--accent);
+    border:1px solid var(--accent-line);
+    border-radius:12px;
+    padding:2px 10px 2px 8px;
+    font-weight:600;
+    font-size:11px;
+  }
+  .commit-note{ color:var(--ink-faint); }
+
+  main{ padding:52px 64px 48px; }
+
+  /* ---- header ---- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:1px solid var(--line);
+    padding-bottom:24px;
+    margin-bottom:32px;
+    gap:24px;
+  }
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:27px;
+    letter-spacing:-0.01em;
+    margin:0 0 8px;
+  }
+  .role{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--accent);
+  }
+  .remotes{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    line-height:1.95;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .remotes .k{
+    display:inline-block;
+    width:66px;
+    color:var(--ink-faint);
+  }
+  .remotes a{ color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--line); }
+  .remotes a:hover{ color:var(--accent); border-color:var(--accent); }
+
+  /* ---- section headings ---- */
+  h2{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:.02em;
+    margin:0 0 18px;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  h2 .hash{ color:var(--accent); font-weight:600; }
+  h2 .label{ text-transform:lowercase; color:var(--ink); font-weight:600; }
+  h2::after{ content:""; flex:1; height:1px; background:var(--line); margin-left:4px; }
+
+  section{ margin-bottom:36px; }
+  section:last-child{ margin-bottom:0; }
+
+  .summary{ font-size:13.5px; line-height:1.75; color:var(--ink); max-width:66ch; }
+
+  /* ---- commit-log timeline ----
+     Single fixed rail width used everywhere so the line and dots
+     always share the same center point — no per-context math. */
+  .log{ position:relative; padding-left:20px; }
+  .log::before{
+    content:"";
+    position:absolute; left:9.5px; top:6px; bottom:6px; width:1px;
+    background:var(--line);
+  }
+  .entry{ position:relative; padding-bottom:20px; }
+  .entry:last-child{ padding-bottom:0; }
+  .entry::before{
+    content:"";
+    position:absolute; left:-14px; top:6px;
+    width:6px; height:6px; border-radius:50%;
+    background:var(--paper); border:1.5px solid var(--ink-faint);
+  }
+  .entry.current::before{
+    left:-16.5px; top:5px; width:9px; height:9px; border-width:2px;
+    border-color:var(--accent);
+    background:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-bg);
+  }
+  .entry-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    gap:12px; flex-wrap:wrap;
+  }
+  .entry-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .hash-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+  .entry-title{ font-weight:500; font-size:13px; color:var(--ink); }
+  .entry-company{ font-weight:500; color:var(--accent); }
+  .head-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    font-weight:600;
+    color:var(--accent);
+    background:var(--accent-bg);
+    border:1px solid var(--accent-line);
+    border-radius:3px;
+    padding:1px 5px;
+    letter-spacing:.04em;
+  }
+  .parttime-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    font-weight:500;
+    color:var(--ink-faint);
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:1px 5px;
+    letter-spacing:.03em;
+  }
+  .entry-date{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--ink-soft); white-space:nowrap;
+  }
+  .entry-desc{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px; line-height:1.65; color:var(--ink-soft);
+    margin-top:4px; max-width:62ch;
+  }
+  .company-repo{
+    background:#F4F1E7;
+    border:1px solid #D8D2C2;
+    border-radius:8px;
+    padding:18px 22px 20px;
+    margin-bottom:20px;
+  }
+  .company-repo:last-child{ margin-bottom:0; }
+  .company-repo-head{
+    padding-bottom:13px; margin-bottom:17px;
+    border-bottom:1px solid #D8D2C2;
+  }
+  .company-repo-title{
+    display:flex; align-items:baseline; gap:8px;
+    min-width:0;
+  }
+  .company-repo .log::before{ background:#C9C2AA; }
+  .company-repo .entry::before{ background:#F4F1E7; }
+  .company-repo-icon{ color:var(--ink-faint); flex-shrink:0; position:relative; top:1px; }
+  .group-company{
+    font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700;
+    color:var(--ink); letter-spacing:.01em;
+    text-transform:uppercase;
+    min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .group-total{
+    display:block;
+    font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    color:var(--ink-faint); font-weight:400;
+    margin-top:5px;
+  }
+
+  /* ---- pinned repos ---- */
+  .repos{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .repo-card{
+    border:1px solid #D8D2C2;
+    border-radius:6px;
+    padding:14px 16px;
+    background:#F4F1E7;
+  }
+  .repo-card-head{
+    display:flex; align-items:center; gap:6px; margin-bottom:6px;
+  }
+  .repo-icon{ color:var(--ink-faint); flex-shrink:0; }
+  .repo-name{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px; font-weight:600; color:var(--accent);
+    text-decoration:none;
+  }
+  .repo-name:hover{ text-decoration:underline; }
+  .repo-desc{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px; line-height:1.6; color:var(--ink-soft);
+    margin:0 0 12px; min-height:34px;
+  }
+  .repo-meta{
+    display:flex; align-items:center; gap:14px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint);
+  }
+  .repo-meta span{ display:inline-flex; align-items:center; gap:5px; }
+  .lang-dot{
+    width:9px; height:9px; border-radius:50%; background:var(--lang-py);
+    display:inline-block;
+  }
+
+  footer{
+    margin-top:38px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-faint);
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---- print ---- */
+  @media print{
+    @page{ size:A4; margin:12mm 14mm; }
+    body{ background:#fff; }
+    .controls{ display:none; }
+    .wrap{ margin:0; max-width:none; }
+    .page{ box-shadow:none; }
+    .chrome{ padding:8px 4px; }
+    main{ padding:18px 4px 0; }
+    h1{ font-size:25px; }
+    .role{ font-size:11px; }
+    h2{ font-size:10.5px; margin-bottom:12px; }
+    section{ margin-bottom:18px; }
+    .company-repo{ padding:8px 12px 10px; margin-bottom:8px; border-color:#ccc; background:#F7F5EF; }
+    .company-repo-head{ padding-bottom:6px; margin-bottom:8px; }
+    .entry{ padding-bottom:10px; }
+    .entry-title{ font-size:9.5px; }
+    .entry-company{ font-size:11px; }
+    .entry-desc{ font-size:10px; line-height:1.4; }
+    .group-company{ font-size:11px; }
+    .group-total{ font-size:9.5px; }
+    .remotes{ font-size:10.5px; line-height:1.7; }
+    .repos{ grid-template-columns:1fr 1fr; gap:8px; }
+    .repo-card{ padding:9px 11px; }
+    .repo-desc{ font-size:10px; min-height:0; margin-bottom:8px; }
+    footer{ margin-top:16px; }
+    a{ color:inherit !important; }
+  }
+
+  @media (max-width:640px){
+    .wrap{ margin:0; }
+    main{ padding:32px 22px; }
+    .chrome{ padding:10px 18px; flex-wrap:wrap; gap:6px; }
+    header{ flex-direction:column; }
+    .repos{ grid-template-columns:1fr; }
+    .entry-head{ flex-direction:column; align-items:flex-start; gap:4px; }
+    .entry-date{ margin-top:1px; }
+    .group-company{ font-size:13px; letter-spacing:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="controls">
+    <button class="btn active" data-lang="da" onclick="setLang('da')">DA</button>
+    <button class="btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="btn" onclick="window.print()">↓ PDF</button>
+  </div>
+
+  <div class="page">
+    <div class="chrome">
+      <div class="crumb"><b>PTST</b><span class="sep">/</span>cv<span class="sep">/</span>README.md</div>
+      <div class="chrome-right">
+        <span class="commit-note" id="chromeCommit">seneste commit · jul. 2026</span>
+        <span class="branch-pill">⎇ main</span>
+      </div>
+    </div>
+
+    <main>
+      <header>
+        <div>
+          <h1>Patrick Steffensen</h1>
+          <div class="role" data-i18n="role">Fullstack-udvikler — Kredit</div>
+        </div>
+        <div class="remotes">
+          <div><span class="k" data-i18n="remotes.location">lokation</span>Aalborg, Danmark</div>
+          <div><span class="k">email</span><a href="mailto:hej@steffensen.io">hej@steffensen.io</a></div>
+          <div><span class="k">github</span><a href="https://github.com/PTST" target="_blank" rel="noopener">github.com/PTST</a></div>
+          <div><span class="k">linkedin</span><a href="https://linkedin.com/in/PTST" target="_blank" rel="noopener">linkedin.com/in/PTST</a></div>
+        </div>
+      </header>
+
+      <section>
+        <h2><span class="hash">##</span><span class="label" data-i18n="h2.summary">profil</span></h2>
+        <p class="summary" data-i18n="summary">
+          Fullstack-udvikler med base i Aalborg, der mestrer både frontend og backend. Bygger
+          kreditløsninger til den danske finanssektor. Har tech lead-rollen på løsningen — og
+          fungerer derudover løbende som arkitekt, samt har været interim PO og BA når de roller
+          har manglet. Erfaringen som konsulent har givet en skarp forståelse for vigtigheden af
+          tæt, direkte kontakt med slutbrugere og kunder — afgørende for at forstå løsningen i dybden.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="hash">##</span><span class="label" data-i18n="h2.experience">erfaring</span></h2>
+        <div id="experience"></div>
+      </section>
+
+      <section>
+        <h2><span class="hash">##</span><span class="label" data-i18n="h2.civic">tillidshverv</span></h2>
+        <div id="civic"></div>
+      </section>
+
+      <section>
+        <h2><span class="hash">##</span><span class="label" data-i18n="h2.projects">udvalgte repos</span></h2>
+        <div class="repos" id="repos"></div>
+      </section>
+
+      <footer>
+        <span data-i18n="footer.left">Opdateret juli 2026</span>
+        <span data-i18n="footer.right">Fuld historik på LinkedIn &amp; GitHub</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+const dict = {
+  role: { da: "Fullstack-udvikler — Kredit", en: "Fullstack Developer — Credit" },
+  "remotes.location": { da: "lokation", en: "location" },
+  "h2.summary": { da: "profil", en: "profile" },
+  "h2.experience": { da: "erfaring", en: "experience" },
+  "h2.projects": { da: "udvalgte repos", en: "pinned repos" },
+  "h2.civic": { da: "tillidshverv", en: "board & civic roles" },
+  parttime: { da: "deltid", en: "part-time" },
+  summary: {
+    da: "Fullstack-udvikler med base i Aalborg, der mestrer både frontend og backend. Bygger kreditløsninger til den danske finanssektor. Har tech lead-rollen på løsningen — og fungerer derudover løbende som arkitekt, samt har været interim PO og BA når de roller har manglet. Erfaringen som konsulent har givet en skarp forståelse for vigtigheden af tæt, direkte kontakt med slutbrugere og kunder — afgørende for at forstå løsningen i dybden.",
+    en: "Fullstack developer based near Aalborg, Denmark, with strong command of both frontend and backend. Builds credit solutions for the Danish financial sector. Holds the tech lead role on the solution — and alongside that, regularly acts as solution architect and has served as interim PO and BA when those roles were vacant. Consulting experience has instilled a strong appreciation for staying in close, direct contact with end users and customers — key to understanding the solution in depth."
+  },
+  "footer.left": { da: "Opdateret juli 2026", en: "Updated July 2026" },
+  "footer.right": { da: "Fuld historik på LinkedIn & GitHub", en: "Full history on LinkedIn & GitHub" }
+};
+
+// Dates are YYYY-MM. endDate:null means ongoing — duration is derived at
+// render time from the real current date, so it never goes stale.
+const experience = [
+  {
+    company: "Scoutz (BEC)",
+    entries: [
+      {
+        hash:"f3a91c2", current:true,
+        titleDa:"Senior Software Engineer", titleEn:"Senior Software Engineer",
+        startDate:"2025-06", endDate:null,
+        descDa:"Udvikler vilde kreditløsninger til banker der tilsammen betjener ca. 1/3 af Danmarks befolkning.",
+        descEn:"Building bold credit solutions for banks that together serve roughly a third of Denmark's population."
+      },
+      {
+        hash:"9c4e0b1",
+        titleDa:"Software Engineer", titleEn:"Software Engineer",
+        startDate:"2024-01", endDate:"2025-06",
+        descDa:"En ambitiøs fusion af Salesforce-talenter fra Spar Nord, Nykredit, Arbejdernes Landsbank og BEC i den største Salesforce-udviklingshub i Norden.",
+        descEn:"An ambitious merger of Salesforce talent from Spar Nord, Nykredit, Arbejdernes Landsbank and BEC — the largest Salesforce development hub in the Nordics."
+      }
+    ]
+  },
+  {
+    company: "Spar Nord",
+    entries: [
+      {
+        hash:"1d7a6f4",
+        titleDa:"Salesforce Udvikler", titleEn:"Salesforce Developer",
+        startDate:"2023-05", endDate:"2024-01",
+        descDa:"", descEn:""
+      }
+    ]
+  },
+  {
+    company: "Econta Consulting Group (ECG)",
+    entries: [
+      {
+        hash:"6b2e88a",
+        titleDa:"Senior Udvikler / Konsulent", titleEn:"Senior Developer / Consultant",
+        startDate:"2022-01", endDate:"2023-05",
+        descDa:"", descEn:""
+      },
+      {
+        hash:"e15fca9",
+        titleDa:"Udvikler / Konsulent", titleEn:"Developer / Consultant",
+        startDate:"2020-10", endDate:"2022-01",
+        descDa:"", descEn:""
+      }
+    ]
+  },
+  {
+    company: "Telenor",
+    entries: [
+      {
+        hash:"a08d3c7",
+        titleDa:"Senior RPA Advisor", titleEn:"Senior RPA Advisor",
+        startDate:"2020-06", endDate:"2020-10",
+        descDa:"Aalborg Kommune, Region Nordjylland, Danmark", descEn:"Aalborg Municipality, North Denmark Region, Denmark"
+      },
+      {
+        hash:"7fbe215",
+        titleDa:"Senior Consultant, RPA COE", titleEn:"Senior Consultant, RPA CoE",
+        startDate:"2019-12", endDate:"2020-06",
+        descDa:"", descEn:""
+      },
+      {
+        hash:"4c9a02e",
+        titleDa:"Workflow Automation Specialist", titleEn:"Workflow Automation Specialist",
+        startDate:"2016-10", endDate:"2019-12",
+        descDa:"Udvikler og enabler ved Telenor Danmarks Robotics Center of Excellence.",
+        descEn:"Developer and enabler at Telenor Denmark's Robotics Center of Excellence."
+      },
+      {
+        hash:"0a58d71",
+        titleDa:"Technical Support Specialist", titleEn:"Technical Support Specialist",
+        startDate:"2015-12", endDate:"2016-10",
+        descDa:"", descEn:""
+      }
+    ]
+  },
+  {
+    company: "4IMPROVE Consulting Group",
+    entries: [
+      {
+        hash:"2e6f9b0", parttime:true,
+        titleDa:"Analyst", titleEn:"Analyst",
+        startDate:"2018-12", endDate:"2019-03",
+        descDa:"", descEn:""
+      }
+    ]
+  }
+];
+
+const civic = [
+  {
+    hash:"5d1c470", parttime:true,
+    titleDa:"Afdelingsbestyrelsesmedlem", titleEn:"Division Board Member",
+    companyDa:"Hasseris Boligselskab, Afdeling 27", companyEn:"Hasseris Boligselskab, Division 27",
+    startDate:"2019-01", endDate:"2020-09",
+    descDa:"Medlem af afdelingsbestyrelsen for \"Afdeling 27\" af det almennyttige boligselskab Hasseris Boligselskab, efter en fusion med Aalborg Boligforening af 1941, hvor jeg tidligere sad i organisationsbestyrelsen.",
+    descEn:"Member of the division board for \"Division 27\" of the non-profit housing association Hasseris Boligselskab, following a merger with Aalborg Boligforening af 1941, where I previously served on the organizational board."
+  },
+  {
+    hash:"b8a03e5", parttime:true,
+    titleDa:"Organisationsbestyrelsesmedlem", titleEn:"Organizational Board Member",
+    companyDa:"Aalborg Boligforening af 1941", companyEn:"Aalborg Boligforening af 1941",
+    startDate:"2017-05", endDate:"2019-01",
+    descDa:"Medlem af organisationsbestyrelsen for det almennyttige boligselskab Aalborg Boligforening af 1941, som administrerer 80 lejligheder i Aalborg midtby.",
+    descEn:"Member of the organizational board for the non-profit housing association Aalborg Boligforening af 1941, which manages 80 apartments in central Aalborg."
+  }
+];
+
+// Home Assistant integrations pinned on github.com/PTST
+const repos = [
+  {
+    name:"LibreView-HomeAssistant", stars:38, forks:2, lang:"Python",
+    descDa:"Integrer LibreLink-sensordata med Home Assistant.",
+    descEn:"Integrate your LibreLink sensor data with Home Assistant."
+  },
+  {
+    name:"O365-HomeAssistant", stars:71, forks:12, lang:"Python", archived:true,
+    descDa:"Office 365-integration til Home Assistant. Arkiveret — men en fork er stadig den største O365-integration til Home Assistant i dag.",
+    descEn:"Office 365 integration for Home Assistant. Archived — but a fork is still the largest O365 integration for Home Assistant today."
+  },
+  {
+    name:"G4S-HomeAssistant", stars:12, lang:"Python",
+    descDa:"G4S-alarmintegration til Home Assistant.",
+    descEn:"G4S Alarm integration for Home Assistant."
+  },
+  {
+    name:"DanskeBiblioteker-HomeAssistant", stars:7, forks:1, lang:"Python",
+    descDa:"Home Assistant-integration der viser aktuelle lån og reservationer fra danske biblioteker.",
+    descEn:"Home Assistant integration to show current loans and reservations from Danish libraries."
+  }
+];
+
+// --- date / duration helpers (all computed live, so "present" roles stay accurate) ---
+function monthsBetween(startYm, endYmOrNull){
+  const [sy, sm] = startYm.split('-').map(Number);
+  let ey, em;
+  if (endYmOrNull){
+    [ey, em] = endYmOrNull.split('-').map(Number);
+  } else {
+    const now = new Date();
+    ey = now.getFullYear(); em = now.getMonth() + 1;
+  }
+  return (ey - sy) * 12 + (em - sm);
+}
+
+function formatDuration(totalMonths, lang){
+  const y = Math.floor(totalMonths / 12);
+  const m = totalMonths % 12;
+  const parts = [];
+  if (lang === 'da'){
+    if (y > 0) parts.push(`${y} år`);
+    if (m > 0) parts.push(`${m} mdr.`);
+    if (parts.length === 0) parts.push('< 1 mdr.');
+  } else {
+    if (y > 0) parts.push(`${y} yr`);
+    if (m > 0) parts.push(`${m} mo`);
+    if (parts.length === 0) parts.push('< 1 mo');
+  }
+  return parts.join(' ');
+}
+
+function dateRangeLabel(startYm, endYmOrNull, lang){
+  const end = endYmOrNull ? endYmOrNull : (lang === 'da' ? 'nu' : 'present');
+  return `${startYm} → ${end}`;
+}
+
+function groupTotalLabel(group, lang){
+  let minStart = null, maxEnd = null, ongoing = false;
+  group.entries.forEach(e => {
+    if (!minStart || e.startDate < minStart) minStart = e.startDate;
+    if (e.endDate === null) ongoing = true;
+    else if (!maxEnd || e.endDate > maxEnd) maxEnd = e.endDate;
+  });
+  const months = monthsBetween(minStart, ongoing ? null : maxEnd);
+  return `${dateRangeLabel(minStart, ongoing ? null : maxEnd, lang)} · ${formatDuration(months, lang)}`;
+}
+
+function renderExperience(lang){
+  const el = document.getElementById('experience');
+  el.innerHTML = experience.map(group => `
+    <div class="company-repo">
+      <div class="company-repo-head">
+        <div class="company-repo-title">
+          <svg class="company-repo-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 1 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1H4.5a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8Z"></path></svg>
+          <span class="group-company" title="${group.company}">${group.company}</span>
+        </div>
+        <span class="group-total">${groupTotalLabel(group, lang)}</span>
+      </div>
+      <div class="log">
+        ${group.entries.map(e => `
+          <div class="entry${e.current ? ' current' : ''}">
+            <div class="entry-head">
+              <div class="entry-title-row">
+                <span class="hash-tag">${e.hash}</span>
+                <span class="entry-title">${lang==='da'?e.titleDa:e.titleEn}</span>
+                ${e.current ? `<span class="head-badge">HEAD</span>` : ''}
+                ${e.parttime ? `<span class="parttime-badge">${dict.parttime[lang]}</span>` : ''}
+              </div>
+              <span class="entry-date">${dateRangeLabel(e.startDate, e.endDate, lang)}</span>
+            </div>
+            ${(lang==='da'?e.descDa:e.descEn) ? `<div class="entry-desc">${lang==='da'?e.descDa:e.descEn}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCivic(lang){
+  const el = document.getElementById('civic');
+  el.innerHTML = civic.map(c => `
+    <div class="company-repo">
+      <div class="company-repo-head">
+        <div class="company-repo-title">
+          <svg class="company-repo-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 1 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1H4.5a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8Z"></path></svg>
+          <span class="group-company" title="${lang==='da'?c.companyDa:c.companyEn}">${lang==='da'?c.companyDa:c.companyEn}</span>
+        </div>
+        <span class="group-total">${dateRangeLabel(c.startDate, c.endDate, lang)}</span>
+      </div>
+      <div class="log">
+        <div class="entry">
+          <div class="entry-head">
+            <div class="entry-title-row">
+              <span class="hash-tag">${c.hash}</span>
+              <span class="entry-title">${lang==='da'?c.titleDa:c.titleEn}</span>
+              ${c.parttime ? `<span class="parttime-badge">${dict.parttime[lang]}</span>` : ''}
+            </div>
+            <span class="entry-date">${dateRangeLabel(c.startDate, c.endDate, lang)}</span>
+          </div>
+          <div class="entry-desc">${lang==='da'?c.descDa:c.descEn}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRepos(lang){
+  const el = document.getElementById('repos');
+  el.innerHTML = repos.map(r => `
+    <div class="repo-card">
+      <div class="repo-card-head">
+        <svg class="repo-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 1 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1H4.5a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8Z"></path></svg>
+        <a class="repo-name" href="https://github.com/PTST/${r.name}" target="_blank" rel="noopener">${r.name}</a>
+      </div>
+      <p class="repo-desc">${lang==='da'?r.descDa:r.descEn}</p>
+      <div class="repo-meta">
+        <span><span class="lang-dot"></span>${r.lang}</span>
+        <span>★ ${r.stars}</span>
+        ${r.forks ? `<span>⑂ ${r.forks}</span>` : ''}
+        ${r.archived ? `<span class="parttime-badge">${lang==='da'?'arkiveret':'archived'}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+const monthNamesDa = ['jan.','feb.','mar.','apr.','maj','jun.','jul.','aug.','sep.','okt.','nov.','dec.'];
+const monthNamesEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function renderChromeCommit(lang){
+  const now = new Date();
+  const label = lang === 'da'
+    ? `seneste commit · ${monthNamesDa[now.getMonth()]} ${now.getFullYear()}`
+    : `latest commit · ${monthNamesEn[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('chromeCommit').textContent = label;
+}
+
+function setLang(lang){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(node => {
+    const key = node.getAttribute('data-i18n');
+    if (dict[key]) node.textContent = dict[key][lang];
+  });
+  document.querySelectorAll('.btn[data-lang]').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+  });
+  renderExperience(lang);
+  renderCivic(lang);
+  renderRepos(lang);
+  renderChromeCommit(lang);
+}
+
+setLang('da');
+</script>
+
+</body>
+</html>
